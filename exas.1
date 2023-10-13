@@ -1,0 +1,25 @@
+.TH EXAS 1 "2023-10-13" Linux
+
+.SH NAME
+exas – execute programs as another user
+
+.SH SYNOPSIS
+\fBexas\fP [-\fBu\fP \fIuser\fP] \fIcommand\fP [\fBargs\fP ...]
+
+.SH DESCRIPTION
+The \fBexas\fP utility is used to execute commands as another user, most
+commonly to run something with root privileges.
+
+.SH OPTIONS
+.TP
+\fB-u\fP \fIuser\fP
+specify user as who to execute supplied command.
+.TP
+\fIcommand\fP
+command that should be executed,
+.TP
+\fIargs\fP
+argument(s) to pass to \fIcommand\fP.
+
+.SH EXIT STATUS
+\fBexas\fP returns on error with a positive none-zero integer.
