@@ -6,7 +6,7 @@ VERSION = 0.1.0
 # paths
 PREFIX = /usr/local
 MANPREFIX = ${PREFIX}/share/man
-LIBS = -lm
+LIBS = -lm -lcrypt
 
 # flags
 CPPFLAGS = -D_DEFAULT_SOURCE -D_BSD_SOURCE -D_XOPEN_SOURCE=700L -DVERSION=\"${VERSION}\"
