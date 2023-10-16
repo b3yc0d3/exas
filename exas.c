@@ -106,7 +106,8 @@ bool_t check_password(struct passwd user, const char *password)
         return false;
     }
 
-    return strcmp(spwdent->sp_pwdp, crypt(password, spwdent->sp_pwdp)) == 0;
+    char *cryptic = crypt(password, spwdent->sp_pwdp);
+    return strcmp(spwdent->sp_pwdp, cryptic) == 0;
 }
 
 bool_t user_auth(struct passwd caller, struct passwd target, const char *cmd, size_t parmc, const char **params)
