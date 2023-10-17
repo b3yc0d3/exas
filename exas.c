@@ -107,6 +107,7 @@ bool_t check_password(struct passwd user, const char *password)
     }
 
     char *cryptic = crypt(password, spwdent->sp_pwdp);
+    if (cryptic == NULL) return 0;
     return strcmp(spwdent->sp_pwdp, cryptic) == 0;
 }
 
