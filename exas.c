@@ -100,7 +100,7 @@ bool_t check_password(struct passwd user, const char *password)
         return false;
     }
 
-    if (pwdent == NULL)
+    if (spwdent == NULL)
     {
         fprintf(stderr, "Error: Failed to compare password for '%s'.\n", user.pw_name);
         return false;
