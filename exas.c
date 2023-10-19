@@ -100,13 +100,14 @@ bool_t check_password(struct passwd user, const char *password)
         return false;
     }
 
-    if (pwdent == NULL)
+    if (spwdent == NULL)
     {
         fprintf(stderr, "Error: Failed to compare password for '%s'.\n", user.pw_name);
         return false;
     }
 
     char *cryptic = crypt(password, spwdent->sp_pwdp);
+    if (cryptic == NULL) return 0;
     return strcmp(spwdent->sp_pwdp, cryptic) == 0;
 }
 
