@@ -1,13 +1,13 @@
 /* exas.c, v 1.0 2023/10/15 */
 /*
  * Exas entry fille
- * 
+ *
  * Copyright (c) 2023 Niklas Kellerer <b3yc0d3@gmail.com>
- *   
+ *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
  * copyright notice and this permission notice appear in all copies.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
  * REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
  * AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
@@ -43,6 +43,15 @@ void exec_cmd(struct passwd usertgt, const char *command, int paramc, char **par
     pid_t fpid = fork();
     if (fpid == 0)
     {
+        /**
+         * Fixes issue #2 from JorianWoltjer
+         * Privilege escalation via $PATH
+         *
+         * $PATH gets overwritten with the value of ``secure_path``
+         * which is defined in the config.h
+         */
+        setenv("PATH", secure_path, 1);
+
         setuid(usertgt.pw_uid);
         execvp(command, params);
         exit(1);
@@ -107,7 +116,8 @@ bool_t check_password(struct passwd user, const char *password)
     }
 
     char *cryptic = crypt(password, spwdent->sp_pwdp);
-    if (cryptic == NULL) return 0;
+    if (cryptic == NULL)
+        return 0;
     return strcmp(spwdent->sp_pwdp, cryptic) == 0;
 }
 
