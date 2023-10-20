@@ -1,25 +1,37 @@
-.TH EXAS 1 "2023-10-13" Linux
-
-.SH NAME
-exas – execute programs as another user
-
-.SH SYNOPSIS
-\fBexas\fP [-\fBu\fP \fIuser\fP] \fIcommand\fP [\fBargs\fP ...]
-
-.SH DESCRIPTION
-The \fBexas\fP utility is used to execute commands as another user, most
-commonly to run something with root privileges.
-
-.SH OPTIONS
-.TP
-\fB-u\fP \fIuser\fP
-specify user as who to execute supplied command.
-.TP
-\fIcommand\fP
-command that should be executed,
-.TP
-\fIargs\fP
-argument(s) to pass to \fIcommand\fP.
-
-.SH EXIT STATUS
-\fBexas\fP returns on error with a positive none-zero integer.
+.\" exas.1, v 1.0 2023/10/20
+.Dd 2023-10-20
+.Dt exas 1
+.Os Linux
+.Sh NAME
+.Nm exas
+.Nd execute commands as another user
+.Sh SYNOPSIS
+.Nm
+.Op Fl u Ar user
+.Op Fl -
+.Ar command
+.Op Ar args
+.Sh DESCRIPTION
+The
+.Nm
+utility executes the given as another user. The
+.Ar command
+argument is always mandatory.
+.Pp
+The options are as follows:
+.Bl -tag -width tenletters
+.It Fl u Ar user
+Execute the command as
+.Ar user .
+The default is root.
+Note: On some systems multiple usernames can resolve to one UID. Like root and
+toor on FreeBSD, resolve to UID 0.
+.El
+.Sh EXIT STATUS
+.Pp
+The
+.Nm
+utility exits 0 on success, and >0 if an error occurs.
+.Sh SEE ALSO
+.Xr doas 1 ,
+.Xr sudo 8

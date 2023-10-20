@@ -5,7 +5,6 @@ static const char *secure_path = "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/
 
 /* rules */
 static const Rule rules[] = {
-    /* permit   user    group      target user   command     arguments */
-    { true, NULL, "wheel", "root", NULL, NULL },
-    NULL
+    /* permit   user    group      target user   command     arguments (null terminated) */
+    { true, NULL, "wheel", "root", NULL, NULL }
 };

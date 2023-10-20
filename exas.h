@@ -35,6 +35,6 @@ void usage(void);
 void exec_cmd(struct passwd usertgt, const char *command, int paramc, char **params);
 char *prompt_password(struct passwd userclr);
 bool_t hasgroup(const char *gname, int ngroups, uid_t *groups);
-bool_t inarray(const char **array1, const char **array2);
-bool_t user_auth(struct passwd caller, struct passwd target, const char *cmd, size_t parmc, const char **params);
+bool_t hasparam(int arr1c, const char **arr1, int arr2c, const char **arr2);
+bool_t user_auth(struct passwd caller, struct passwd target, const char *cmd, size_t paramc, const char **params);
 bool_t check_password(struct passwd user, const char *password);

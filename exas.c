@@ -1,4 +1,4 @@
-/* exas.c, v 1.0 2023/10/15 */
+/* exas.c, v 1.0 2023/10/20 */
 /*
  * Exas entry fille
  *
@@ -62,28 +62,21 @@ void exec_cmd(struct passwd usertgt, const char *command, int paramc, char **par
     }
 }
 
-bool_t inarray(const char **array1, const char **array2)
+// Compare a1 with a2
+bool_t hasparam(int a1c, const char *a1[], int a2c, const char *a2[])
 {
-    size_t narray1 = sizeof(array1) / sizeof(array1[0]);
-    size_t narray2 = sizeof(array2) / sizeof(array2[0]);
+    int matches = 0;
+    int i = 0;
+    int j = 1;
 
-    for (int i = 0; i < narray2; ++i)
+    for (; i < a2c; ++i)
     {
-        bool_t found = false;
-        for (int j = 0; j < narray1; ++j)
-        {
-            if (array2[i] == array1[j])
-            {
-                found = true;
-                break;
-            }
-        }
-        if (!found)
-        {
-            return false;
-        }
+        for (; j < a1c; ++j)
+            if (strcmp(a2[i], a1[j]) == 0)
+                ++matches;
     }
-    return true;
+
+    return matches > 0;
 }
 
 bool_t hasgroup(const char *gname, int ngroups, uid_t *groups)
@@ -121,9 +114,8 @@ bool_t check_password(struct passwd user, const char *password)
     return strcmp(spwdent->sp_pwdp, cryptic) == 0;
 }
 
-bool_t user_auth(struct passwd caller, struct passwd target, const char *cmd, size_t parmc, const char **params)
+bool_t user_auth(struct passwd caller, struct passwd target, const char *cmd, size_t paramc, const char **params)
 {
-    bool_t success = false;
     int ngroups = 0;
     // Just there to get the "group count"
     getgrouplist(caller.pw_name, caller.pw_gid, NULL, &ngroups);
@@ -135,23 +127,33 @@ bool_t user_auth(struct passwd caller, struct passwd target, const char *cmd, si
     for (size_t i = nrules; i > 0; --i)
     {
         const Rule currul = rules[i - 1];
+
+        int argc = 0;
+        if (currul.arguments != NULL)
+        {
+            for (; currul.arguments[argc] != NULL; ++argc)
+                ;
+        }
+
         bool_t matchuser = (currul.user == NULL || strcmp(caller.pw_name, currul.user) == 0);
         bool_t matchgrp = (currul.group == NULL || hasgroup(currul.group, ngroups, callergrs));
         bool_t matchtgt = (currul.tuser == NULL || strcmp(target.pw_name, currul.tuser) == 0);
         bool_t matchcmd = (currul.command == NULL || strcmp(cmd, currul.command) == 0);
-        bool_t matchargs = (currul.arguments == NULL || inarray(params, currul.arguments));
+        bool_t matchargs = (currul.arguments == NULL || hasparam(paramc, params, argc, currul.arguments));
 
         if (matchuser && matchgrp && matchtgt && matchcmd && matchargs)
-            success = true;
-    }
-
-    if (success)
-    {
-        char *userpwd = prompt_password(caller);
-        if (check_password(caller, userpwd))
         {
-            userpwd = realloc(userpwd, sizeof(userpwd));
-            return true;
+            if (currul.permit == true)
+            {
+                char *userpwd = prompt_password(caller);
+                if (check_password(caller, userpwd))
+                {
+                    userpwd = realloc(userpwd, sizeof(userpwd));
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 
