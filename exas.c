@@ -79,12 +79,19 @@ bool_t hasparam(int a1c, const char *a1[], int a2c, const char *a2[])
     return matches > 0;
 }
 
-bool_t hasgroup(const char *gname, int ngroups, uid_t *groups)
+bool_t hasgroup(const char *gname, int ngroups, gid_t *groups)
 {
+    struct group *tgroup = NULL;
+
+    if ((tgroup = getgrnam(gname)) == NULL)
+    {
+        fprintf(stderr, "Error: Unknown group of '%s'\n", gname);
+        return false;
+    }
+
     for (int i = 0; i < ngroups; ++i)
     {
-        struct group *gr = getgrgid(groups[i]);
-        if (strcmp(gr->gr_name, gname) == 0)
+        if (groups[i] == tgroup->gr_gid)
             return true;
     }
 
@@ -145,12 +152,26 @@ bool_t user_auth(struct passwd caller, struct passwd target, const char *cmd, si
         {
             if (currul.permit == true)
             {
-                char *userpwd = prompt_password(caller);
-                if (check_password(caller, userpwd))
+                /*
+                 * Give the user three attempts for password inputs
+                 * if incorrect
+                 */
+                int c = 0;
+                for (; c < 3; ++c)
                 {
-                    userpwd = realloc(userpwd, sizeof(userpwd));
-                    return true;
+                    char *userpwd = prompt_password(caller);
+                    if (check_password(caller, userpwd))
+                    {
+                        userpwd = realloc(userpwd, sizeof(userpwd));
+                        return true;
+                    }
+                    else
+                    {
+                        fprintf(stderr, "Sorry, try again\n");
+                    }
                 }
+
+                fprintf(stderr, "3 incorrect password attempts\n");
             }
 
             return false;
