@@ -1,6 +1,7 @@
 # Project specific
 config.h
 exas
+.vscode
 
 # Prerequisites
 *.d

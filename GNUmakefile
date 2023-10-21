@@ -29,17 +29,17 @@ clean:
 	rm -f exas ${OBJ}
 
 install: all
-	mkdir -p ${DESTDIR}${PREFOX}/bin
-	cp exas ${DESTDIR}${PREFOX}/bin
-	chmod 4775 ${DESTDIR}${PREFOX}/bin/exas
+	mkdir -p ${DESTDIR}${PREFIX}/bin
+	cp exas ${DESTDIR}${PREFIX}/bin
+	chmod 4755 ${DESTDIR}${PREFIX}/bin/exas
 
 	# Man Page
-	mkdir -p ${DESTDIR}${PREFOX}/man1
-	cp exas.1 ${DESTDIR}${PREFOX}/man1/exas.1
-	chmod 644 ${DESTDIR}${PREFOX}/man1/exas.1
+	mkdir -p  ${DESTDIR}${MANPREFIX}/man1
+	cp exas.1 ${DESTDIR}${MANPREFIX}/man1/exas.1
+	chmod 644 ${DESTDIR}${MANPREFIX}/man1/exas.1
 
 uninstall:
 	rm -f ${DESTDIR}${PREFIX}/bin/exas\
-			${DESTDIR}${PREFIX}/man1/exas.1
+			${DESTDIR}${MANPREFIX}/man1/exas.1
 
 .PHONY: all options clean install uninstall
