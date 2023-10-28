@@ -1,4 +1,4 @@
-/* exas.c, v 1.0 2023/10/20 */
+/* exas.c, v 1.0 2023/10/28 */
 /*
  * Exas entry fille
  *
@@ -38,7 +38,7 @@ void usage(void)
     exit(1);
 }
 
-void exec_cmd(struct passwd usertgt, const char *command, int paramc, char **params)
+void execcmd(struct passwd usertgt, const char *command, int paramc, char **params)
 {
     pid_t fpid = fork();
     if (fpid == 0)
@@ -50,7 +50,7 @@ void exec_cmd(struct passwd usertgt, const char *command, int paramc, char **par
          * $PATH gets overwritten with the value of ``secure_path``
          * which is defined in the config.h
          */
-        setenv("PATH", secure_path, 1);
+        setenv("PATH", safepath, 1);
 
         setuid(usertgt.pw_uid);
         execvp(command, params);
@@ -62,7 +62,6 @@ void exec_cmd(struct passwd usertgt, const char *command, int paramc, char **par
     }
 }
 
-// Compare a1 with a2
 bool_t hasparam(int a1c, const char *a1[], int a2c, const char *a2[])
 {
     int matches = 0;
@@ -98,7 +97,7 @@ bool_t hasgroup(const char *gname, int ngroups, gid_t *groups)
     return false;
 }
 
-bool_t check_password(struct passwd user, const char *password)
+bool_t passwdcheck(struct passwd user, const char *password)
 {
     struct passwd *pwdent = getpwnam(user.pw_name);
     struct spwd *spwdent = getspnam(user.pw_name);
@@ -121,10 +120,10 @@ bool_t check_password(struct passwd user, const char *password)
     return strcmp(spwdent->sp_pwdp, cryptic) == 0;
 }
 
-bool_t user_auth(struct passwd caller, struct passwd target, const char *cmd, size_t paramc, const char **params)
+bool_t permit(struct passwd caller, struct passwd target, const char *cmd, size_t paramc, const char **params)
 {
     int ngroups = 0;
-    // Just there to get the "group count"
+    /* just there to get the group count */
     getgrouplist(caller.pw_name, caller.pw_gid, NULL, &ngroups);
     gid_t callergrs[ngroups];
     getgrouplist(caller.pw_name, caller.pw_gid, callergrs, &ngroups);
@@ -159,8 +158,8 @@ bool_t user_auth(struct passwd caller, struct passwd target, const char *cmd, si
                 int c = 0;
                 for (; c < 3; ++c)
                 {
-                    char *userpwd = prompt_password(caller);
-                    if (check_password(caller, userpwd))
+                    char *userpwd = pwdprompt(caller);
+                    if (passwdcheck(caller, userpwd))
                     {
                         userpwd = realloc(userpwd, sizeof(userpwd));
                         return true;
@@ -181,31 +180,31 @@ bool_t user_auth(struct passwd caller, struct passwd target, const char *cmd, si
     return false;
 }
 
-char *prompt_password(struct passwd userclr)
+char *pwdprompt(struct passwd userclr)
 {
     char *text = NULL;
     size_t len = 0;
     ssize_t read = 0;
-    struct termios oldTerm, newTerm;
+    struct termios oldterm, newterm;
 
     fprintf(stderr, "password for %s: ", userclr.pw_name);
 
-    if (tcgetattr(STDIN_FILENO, &oldTerm) != 0)
+    if (tcgetattr(STDIN_FILENO, &oldterm) != 0)
         return NULL;
 
-    newTerm = oldTerm;
-    newTerm.c_lflag &= ~ECHO;
+    newterm = oldterm;
+    newterm.c_lflag &= ~ECHO;
 
-    if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &newTerm) != 0)
+    if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &newterm) != 0)
         return NULL;
 
     read = getline(&text, &len, stdin);
 
-    // remove line break
+    /* remove line break */
     if (text[read - 1] == '\n')
         text[read - 1] = '\0';
 
-    (void)tcsetattr(STDIN_FILENO, TCSAFLUSH, &oldTerm);
+    (void)tcsetattr(STDIN_FILENO, TCSAFLUSH, &oldterm);
     putc('\n', stderr);
 
     return text;
@@ -213,15 +212,16 @@ char *prompt_password(struct passwd userclr)
 
 int main(int argc, char **argv)
 {
-    opterr = 0; // disable getopts error message
+    /* disable getopts(3) error message */
+    opterr = 0;
 
     int opt;
     int paramc = 0;
     char *usertgtname = NULL;
     char **params = NULL;
     char *command = NULL;
-    struct passwd usertgt; // user to execute process as
-    struct passwd usercl;  // user that executed exas (aka. this program)
+    struct passwd usertgt;      /* user to execute process as */
+    struct passwd usercaller;   /* user that executed exas (aka. this program) */
     struct passwd *result;
     char *bufusertgt = NULL;
     char *bufusercl = NULL;
@@ -242,8 +242,8 @@ int main(int argc, char **argv)
         exit(1);
     }
 
-    // Get real caller uid
-    getpwuid_r(getuid(), &usercl, bufusercl, bufsize, &result);
+    /* get real caller uid */
+    getpwuid_r(getuid(), &usercaller, bufusercl, bufsize, &result);
 
     while ((opt = getopt(argc, argv, "+u:")) != -1)
     {
@@ -282,12 +282,12 @@ int main(int argc, char **argv)
     else
         getpwnam_r(usertgtname, &usertgt, bufusertgt, bufsize, &result);
 
-    if (!user_auth(usercl, usertgt, command, paramc, (const char **)params))
+    if (!permit(usercaller, usertgt, command, paramc, (const char **)params))
     {
         fprintf(stderr, "Operation not permitted.\n");
         exit(1);
     }
 
-    exec_cmd(usertgt, command, paramc, params);
+    execcmd(usertgt, command, paramc, params);
     return 0;
 }

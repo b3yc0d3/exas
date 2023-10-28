@@ -1,4 +1,4 @@
-/* exas.h, v 1.0 2023/10/15 */
+/* exas.h, v 1.0 2023/10/28 */
 /*  
  * Copyright (c) 2023 Niklas Kellerer <b3yc0d3@gmail.com>
  *   
@@ -19,6 +19,9 @@
 extern char *optarg;
 extern int optind, opterr, optopt;
 
+static const char *safepath = "/bin:/sbin:/usr/bin:/usr/sbin:"
+                              "/usr/local/bin:/usr/local/sbin";
+
 typedef enum { false, true } bool_t;
 
 typedef struct {
@@ -31,10 +34,9 @@ typedef struct {
 } Rule;
 
 void usage(void);
-//void exec_cmd(struct passwd usertgt, const char *command, char **params);
-void exec_cmd(struct passwd usertgt, const char *command, int paramc, char **params);
-char *prompt_password(struct passwd userclr);
+void execcmd(struct passwd usertgt, const char *command, int paramc, char **params);
+char *pwdprompt(struct passwd userclr);
 bool_t hasgroup(const char *gname, int ngroups, uid_t *groups);
 bool_t hasparam(int arr1c, const char **arr1, int arr2c, const char **arr2);
-bool_t user_auth(struct passwd caller, struct passwd target, const char *cmd, size_t paramc, const char **params);
-bool_t check_password(struct passwd user, const char *password);
+bool_t permit(struct passwd caller, struct passwd target, const char *cmd, size_t paramc, const char **params);
+bool_t passwdcheck(struct passwd user, const char *password);

@@ -1,9 +1,14 @@
 # exas
 
-EXAS is a minimalistic tool inspired by `sudo(8)`[^1] and `doas(1)`[^2] that
-allows the execution of commands or programs as another user.
+`exas` is a minimalist alternative for `sudo(8)`[^1] and `doas(1)`[^2] that
+allows the execution of commands as another user.
+
 The configuration is done before compiling, following the principles of
 [suckless.org](https://suckless.org) software, through a header file.
+
+> [!WARNING]
+> This software is unfinished. Keep your expectations low.
+> Help to improve exas by contributing.
 
 ## Getting Started
 
@@ -14,8 +19,8 @@ from source, 'cuase there aren't any package versions of it.
 
 The things you need before installing the software.
 
+* GNU Make Utility
 * Clang (can be changed in the *config.mk*)
-* GNU Make
 
 ### Configuration
 As mentioned in the intro text, `exas` if configured through a specific
@@ -35,7 +40,8 @@ Lets explain what which "parameter" does and what value it takes.
 
 permit
 : Whether the rule **allows** or **denys** the execution of a match.<br>
-    Takes either a bool value or an integer of 0 or 1.
+    Takes a bool value of <abbr title="(int) 1">`true`</abbr> or <abbr title="(int) 0">`false`</abbr>.
+    
 
 user
 : Name of user that should be matched by the rule.<br>
@@ -55,7 +61,7 @@ command
 
 arguments
 : Arguments for `command`.<br>
-    Takes an array of `char *`. If set to `NULL`, the rule will not check for any arguments.
+    Takes an array of `char **`. If set to `NULL`, the rule will not check for any arguments.
 
 ### Build Process
 1. Clone exas repository
@@ -69,7 +75,10 @@ arguments
     gmake
     ```
 
-3. Edit the configuration in `config.h`<br>*See [**Configuration**](#configuration) section*
+3. Edit the configuration in `config.h`<br>
+    The default configuration allows all members of the `wheels` group to execute any command as *root*.
+    <br>
+    *See [**Configuration**](#configuration) section*
 
 4. Build exas using gmake
     ```shell
@@ -125,5 +134,5 @@ man exas
 This project is licensed under the ISC-License. See `LICENSE` file for more
 informations.
 
-[^1]: [Linux Manual Page](https://man.archlinux.org/man/sudo.8.en) - [Project Site](https://www.sudo.ws/)
+[^1]: [Linux Manual Page](https://man.archlinux.org/man/sudo.8.en)  - [Source](https://github.com/sudo-project/sudo) - [Project Site](https://www.sudo.ws/)
 [^2]: [OpenBSD Manual Page](https://man.openbsd.org/doas) - [Source](https://cvsweb.openbsd.org/src/usr.bin/doas/)
