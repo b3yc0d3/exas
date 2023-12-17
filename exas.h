@@ -1,4 +1,4 @@
-/* exas.h, v 1.0 2023/10/28 */
+/* exas.h, v 1.0.1 2023/10/28 */
 /*  
  * Copyright (c) 2023 Niklas Kellerer <b3yc0d3@gmail.com>
  *   
@@ -19,6 +19,8 @@
 extern char *optarg;
 extern int optind, opterr, optopt;
 
+extern char **environ;
+
 static const char *safepath = "/bin:/sbin:/usr/bin:/usr/sbin:"
                               "/usr/local/bin:/usr/local/sbin";
 
@@ -34,7 +36,8 @@ typedef struct {
 } Rule;
 
 void usage(void);
-void execcmd(struct passwd usertgt, const char *command, int paramc, char **params);
+void makeenv(const char **keeplist, char ***new_env);
+void execcmd(struct passwd caller, struct passwd usertgt, const char *command, int paramc, char **params);
 char *pwdprompt(struct passwd userclr);
 bool_t hasgroup(const char *gname, int ngroups, uid_t *groups);
 bool_t hasparam(int arr1c, const char **arr1, int arr2c, const char **arr2);

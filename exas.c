@@ -1,8 +1,9 @@
-/* exas.c, v 1.0 2023/10/28 */
+/* exas.c, v 1.0.1 2023/10/28 */
 /*
  * Exas entry fille
  *
  * Copyright (c) 2023 Niklas Kellerer <b3yc0d3@gmail.com>
+ *                    NikOverflow <niklasst2102@gmail.com>
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -38,7 +39,38 @@ void usage(void)
     exit(1);
 }
 
-void execcmd(struct passwd usertgt, const char *command, int paramc, char **params)
+void makeenv(const char **keeplist, char ***new_env)
+{
+    int new_env_size = 1;
+    int index = 0;
+    (*new_env) = malloc(new_env_size * sizeof(char *));
+    int i, j;
+
+    for (i = 0; environ[i] != NULL; ++i)
+    {
+        char *envname = strndup(environ[i], (strchr(environ[i], '=') - environ[i]));
+
+        for (j = 0; keeplist[j] != NULL; ++j)
+        {
+
+            if (strcmp(envname, keeplist[j]) == 0)
+            {
+                ++new_env_size;
+                (*new_env) = realloc((*new_env), new_env_size * sizeof(char *));
+                (*new_env)[index] = strdup(environ[i]);
+
+                ++index;
+                break;
+            }
+        }
+
+        free(envname);
+    }
+
+    (*new_env)[index] = NULL;
+}
+
+void execcmd(struct passwd caller, struct passwd usertgt, const char *command, int paramc, char **params)
 {
     pid_t fpid = fork();
     if (fpid == 0)
@@ -47,24 +79,37 @@ void execcmd(struct passwd usertgt, const char *command, int paramc, char **para
          * Fixes issue #2 from JorianWoltjer
          * Privilege escalation via $PATH
          *
-         * $PATH gets overwritten with the value of ``secure_path``
+         * $PATH gets overwritten with the value of ``safepath``
          * which is defined in the config.h
          */
         setenv("PATH", safepath, 1);
 
         setuid(usertgt.pw_uid);
         setgid(usertgt.pw_gid);
-        /**
-         * TODO: set entire list of users groups
-        */
+
         int ngroups = 0;
         getgrouplist(usertgt.pw_name, usertgt.pw_gid, NULL, &ngroups);
         gid_t groups[ngroups];
         getgrouplist(usertgt.pw_name, usertgt.pw_gid, groups, &ngroups);
-
         setgroups(ngroups, groups);
 
-        execvp(command, params);
+        /* setting up new enviorment */
+        char **new_env;
+        const char *keep_env[4] = {"DISPLAY", "COLORTERM", "TERM", NULL};
+        makeenv(keep_env, &new_env);
+        environ = new_env;
+
+        /* Set environment variables */
+        setenv("HOME", usertgt.pw_dir, 1);
+        setenv("LOGNAME", usertgt.pw_name, 1);
+        setenv("PATH", safepath, 1);
+        setenv("SHELL", usertgt.pw_shell, 1);
+        setenv("USER", usertgt.pw_name, 1);
+        setenv("EXAS_USER", caller.pw_name, 1);
+
+        if (execvp(command, params) == -1)
+            fprintf(stderr, "%s\n", strerror(errno));
+
         exit(1);
     }
     else
@@ -231,8 +276,8 @@ int main(int argc, char **argv)
     char *usertgtname = NULL;
     char **params = NULL;
     char *command = NULL;
-    struct passwd usertgt;      /* user to execute process as */
-    struct passwd usercaller;   /* user that executed exas (aka. this program) */
+    struct passwd usertgt;    /* user to execute process as */
+    struct passwd usercaller; /* user that executed exas (aka. this program) */
     struct passwd *result;
     char *bufusertgt = NULL;
     char *bufusercl = NULL;
@@ -299,6 +344,6 @@ int main(int argc, char **argv)
         exit(1);
     }
 
-    execcmd(usertgt, command, paramc, params);
+    execcmd(usercaller, usertgt, command, paramc, params);
     return 0;
 }
