@@ -53,6 +53,17 @@ void execcmd(struct passwd usertgt, const char *command, int paramc, char **para
         setenv("PATH", safepath, 1);
 
         setuid(usertgt.pw_uid);
+        setgid(usertgt.pw_gid);
+        /**
+         * TODO: set entire list of users groups
+        */
+        int ngroups = 0;
+        getgrouplist(usertgt.pw_name, usertgt.pw_gid, NULL, &ngroups);
+        gid_t groups[ngroups];
+        getgrouplist(usertgt.pw_name, usertgt.pw_gid, groups, &ngroups);
+
+        setgroups(ngroups, groups);
+
         execvp(command, params);
         exit(1);
     }
