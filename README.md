@@ -1,8 +1,8 @@
 # exas
 
-`exas` is a minimalist alternative for `sudo(8)`[^1] and `doas(1)`[^2] that
+`exas` is a minimalist alternative to `sudo(8)`[^1] that
 allows the execution of commands as another user.
-
+It is highly inspired by `doas(1)`[^2].
 The configuration is done before compiling, following the principles of
 [suckless.org](https://suckless.org) software, through a header file.
 
@@ -19,15 +19,15 @@ from source, 'cuase there aren't any package versions of it.
 
 The things you need before installing the software.
 
-* GNU Make Utility
+* Make Utility (e.g. gmake)
 * Clang (can be changed in the *config.mk*)
 
 ### Configuration
-As mentioned in the intro text, `exas` if configured through a specific
-header file that is called `config.h` (which is a copy of `config.def.h`).
+As mentioned in the intro text, `exas` is configured through a header
+file that is called `config.h` (which is a copy of `config.def.h`).
 
 By default the `config.h` looks like the following sniped. It allows **all**
-users that are in the group of *wheel* to execute any command as root.
+users of group *wheel* to execute any command as root.
 
 ```c
 static const Rule rules[] = {
@@ -36,32 +36,18 @@ static const Rule rules[] = {
 };
 ```
 
-Lets explain what which "parameter" does and what value it takes.
+Lets explain what which "parameter" does and what value it takes:
 
-permit
-: Whether the rule **allows** or **denys** the execution of a match.<br>
-    Takes a bool value of <abbr title="(int) 1">`true`</abbr> or <abbr title="(int) 0">`false`</abbr>.
-    
+| Parameter Name | Type   | Value                | Description                                                |
+|:---------------|:-------|:---------------------|:-----------------------------------------------------------|
+| permit         | int    | 0 or 1               | Whether to **allow** or **deny** the execution of a match. |
+| user           | char*  | String or NULL       | Name of user the rules applies to.                         |
+| group          | char*  | String or NULL       | Name of group the rules applies to.                        |
+| target user    | char*  | String or NULL       | Name of user to execute as. (e.g. root)                    |
+| command        | char*  | String or NULL       | Command that should be matched.                            |
+| arguments      | char** | String array or NULL | Arguments that should be matched                           |
 
-user
-: Name of user that should be matched by the rule.<br>
-    Takes an `char *`. If set to `NULL`, no user name matching will be done.
-
-group
-: Name of group that should be matched by the rule.<br>
-    Takes an `char *`. If set to `NULL`, no group name matching will be done.
-
-target user
-: Name of user to execute as.<br>
-    Takes an `char *`. If set to `NULL`, the rule will allow *any* target user.
-
-command
-: Command that should be matched by the rule.<br>
-    Takes an `char *`. If set to `NULL`, the rule will not check for a command.
-
-arguments
-: Arguments for `command`.<br>
-    Takes an array of `char **`. If set to `NULL`, the rule will not check for any arguments.
+If a parameter is set to NULL, it will not be checked. Null is equal to "ignore that value".
 
 ### Build Process
 1. Clone exas repository
@@ -70,9 +56,9 @@ arguments
     cd exas
     ```
 
-2. Initial exas build using gmake
+2. Initial exas build using make
     ```shell
-    gmake
+    make
     ```
 
 3. Edit the configuration in `config.h`<br>
@@ -80,9 +66,9 @@ arguments
     <br>
     *See [**Configuration**](#configuration) section*
 
-4. Build exas using gmake
+4. Build exas using make
     ```shell
-    gmake
+    make
     ```
 
 
@@ -95,13 +81,13 @@ In order to install `exas` globally on your system, as any other software,
 simple run the following command
 
 ```shell
-gmake clean install
+make clean install
 ```
 
 Optionally `DESTDIR` can be set.
 
 ```shell
-gmake DESTDIR=/your/installation/path clean install
+make DESTDIR=/your/installation/path clean install
 ```
 
 
@@ -116,12 +102,6 @@ Options:
 Parameters
    command    command that should be executed
    args       zero or more arguments for ``command``
-```
-
-A few examples of how to use `exas`.
-
-```
-exas -- pacman -Syu
 ```
 
 For more information, read the manual page of exas
